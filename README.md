@@ -26,6 +26,29 @@ When found <code>transitions:</code> line, then it starts the transitions declar
 
 The first argument (until white space) is the current state it is in, the second one is the symbol label (delimited by whitespace) that is the path to go to the destination state (third argument).
 
+### Example
+![](ex.png?=classes=float-left)
+
+Input
+
+```
+states:
+A
+B S
+C F
+D F
+
+ # fdsnfjds
+transitions:
+A x A
+A y B
+A z B
+B w C
+C x A
+C w D
+```
+\* Lines with <code>#</code> are comments, then ignored.
+
 ## Tip to render the automata graphically in Linux
 
 1. Install Graphviz:
