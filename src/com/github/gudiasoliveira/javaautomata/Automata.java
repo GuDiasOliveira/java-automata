@@ -1,7 +1,9 @@
 package com.github.gudiasoliveira.javaautomata;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Automata<TState, TSymbol> {
 	
@@ -83,13 +85,8 @@ public class Automata<TState, TSymbol> {
 		public Automata<TState, TSymbol> build() {
 			Automata<TState, TSymbol> automata = new Automata<>();
 			
-			automata.mStates = (TState[]) mStates.toArray();
-//			automata.mStates = (TState[]) new Object[mStates.size()];
-//			mStates.toArray(automata.mStates);
-			
+			automata.mStates = (TState[]) mStates.toArray();			
 			automata.mSymbols= (TSymbol[]) mSymbols.toArray();
-//			automata.mSymbols = (TSymbol[]) new Object[mSymbols.size()];
-//			mSymbols.toArray(automata.mSymbols);
 			
 			automata.mInitialStateIndex = 0;
 			int i = 0;
@@ -113,7 +110,12 @@ public class Automata<TState, TSymbol> {
 			for (i = 0; i < finalStateIndexes.size(); i++)
 				automata.mFinalStateIndexes[i] = finalStateIndexes.get(i);
 			
-			automata.mTransitionFunction = (Transition<TState, TSymbol>[]) mTransitionFunction.toArray();
+			automata.mTransitionFunction = new Transition[mTransitionFunction.size()];
+			i = 0;
+			for (Transition<TState, TSymbol> trans : mTransitionFunction) {
+				automata.mTransitionFunction[i] = trans;
+				i++;
+			}
 			
 			return automata;
 		}
@@ -135,6 +137,16 @@ public class Automata<TState, TSymbol> {
 				return null;
 		}
 		return currentState;
+	}
+	
+	public Map<TSymbol, TState> getTransitions(TState state) {
+		Map<TSymbol, TState> transitions = new HashMap<>();
+		for (Transition<TState, TSymbol> trans : mTransitionFunction) {
+			if (trans.stateIn.equals(state)) {
+				transitions.put(trans.symbol, trans.stateOut);
+			}
+		}
+		return transitions;
 	}
 	
 	public TState getState(int index) {
