@@ -72,6 +72,13 @@ public class Automata<TState, TSymbol> {
 			return this;
 		}
 		
+		public Builder<TState, TSymbol> addFinalStates(List<TState> states) {
+			for (TState state : states) {
+				mFinalStates.add(state);
+			}
+			return this;
+		}
+		
 		public Builder<TState, TSymbol> setInitialState(TState state) {
 			mInitialState = state;
 			return this;
