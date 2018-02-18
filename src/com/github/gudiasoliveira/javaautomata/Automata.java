@@ -215,4 +215,8 @@ public class Automata<TState, TSymbol> {
 				return true;
 		return false;
 	}
+	
+	public boolean accept(TSymbol... symbols) {
+		return isFinalState(transition(getInitialState(), symbols));
+	}
 }

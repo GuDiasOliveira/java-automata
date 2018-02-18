@@ -13,6 +13,16 @@ public class Program {
 	private static BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
 	public static void main(String[] args) {
+		if (args.length == 0) {
+			System.err.println("No option selected!");
+			System.exit(1);
+			return;
+		}
+		if (args[0].equals("--help")) {
+			displayHelp();
+			return;
+		}
+		
 		Automata.Builder<String, String> automataBuilder = new Automata.Builder<>();
 //		// For initial tests
 //		automata.setStates("A", "B", "C", "D");
@@ -101,6 +111,9 @@ public class Program {
 		
 		Automata<String, String> automata = automataBuilder.build();
 		
+		String[] symbolsArgs = new String[args.length - 1];
+		for (int i = 0; i < symbolsArgs.length; i++)
+			symbolsArgs[i] = args[i+1];
 		switch(args[0]) {
 		case "--dot-graph":
 			System.out.println(toDotGraph(automata));
@@ -118,14 +131,35 @@ public class Program {
 			break;
 		case "--transition":
 			String state = automata.getInitialState();
-			String[] symbolsArgs = new String[args.length - 1];
-			for (int i = 0; i < symbolsArgs.length; i++)
-				symbolsArgs[i] = args[i+1];
 			state = automata.transition(state, symbolsArgs);
 			if (state != null)
 				System.out.println(state);
 			break;
+		case "--accept":
+			System.exit(automata.accept(symbolsArgs) ? 0 : 1);
+			break;
+		case "--help":
+			break;
+		default:
+			System.err.println("Invalid option!");
+			System.exit(1);
+			return;
 		}
+	}
+	
+	private static void displayHelp() {
+		System.out.println("Options:");
+		System.out.println("--dot-graph\n  "
+				+ "Outputs a DOT language Graph of the automata");
+		System.out.println("--transitions [sequence of symbols]\n  "
+				+ "Outputs the sequence of transitions for the symbols sequence");
+		System.out.println("--transition [sequence of symbols]\n  "
+				+ "Outputs the current state after a sequence of transitions from the symbols. Outputs none if no state");
+		System.out.println("--accept [sequence of symbols]\n  "
+				+ "Return status code of success if the sequence of transitions took to a accepter (final) state."
+				+ " Failure status code otherwise");
+		System.out.println("--help\n  "
+				+ "Display this help");
 	}
 	
 	private static String readInput() {
