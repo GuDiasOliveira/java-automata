@@ -13,7 +13,7 @@ public class Program {
 	private static BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
 	public static void main(String[] args) {
-		Automata.Builder<String, String> automata = new Automata.Builder<>();
+		Automata.Builder<String, String> automataBuilder = new Automata.Builder<>();
 //		// For initial tests
 //		automata.setStates("A", "B", "C", "D");
 //		automata.addFinalStates("B", "D");
@@ -70,9 +70,9 @@ public class Program {
 			System.exit(1);
 			return;
 		}
-		automata.setStates(states);
-		automata.addFinalStates(finalStates);
-		automata.setInitialState(initialState);
+		automataBuilder.setStates(states);
+		automataBuilder.addFinalStates(finalStates);
+		automataBuilder.setInitialState(initialState);
 		
 		List<String> symbols = new ArrayList<String>();
 		while ((line = readInput()) != null) {
@@ -95,11 +95,37 @@ public class Program {
 			}
 			if (!symbols.contains(inputs[1].trim()))
 				symbols.add(inputs[1].trim());
-			automata.transitionFunction(inputs[0].trim(), inputs[1].trim(), inputs[2].trim());
+			automataBuilder.transitionFunction(inputs[0].trim(), inputs[1].trim(), inputs[2].trim());
 		}
-		automata.setSymbols(symbols);
+		automataBuilder.setSymbols(symbols);
 		
-		System.out.println(toDotGraph(automata.build()));
+		Automata<String, String> automata = automataBuilder.build();
+		
+		switch(args[0]) {
+		case "--dot-graph":
+			System.out.println(toDotGraph(automata));
+			break;
+		case "--transitions":
+			String currentState = automata.getInitialState();
+			System.out.println(currentState);
+			for_transitions:
+			for (int i = 1; i < args.length; i++) {
+				currentState = automata.transition(currentState, args[i]);
+				if (currentState == null)
+					break for_transitions;
+				System.out.println(currentState);
+			}
+			break;
+		case "--transition":
+			String state = automata.getInitialState();
+			String[] symbolsArgs = new String[args.length - 1];
+			for (int i = 0; i < symbolsArgs.length; i++)
+				symbolsArgs[i] = args[i+1];
+			state = automata.transition(state, symbolsArgs);
+			if (state != null)
+				System.out.println(state);
+			break;
+		}
 	}
 	
 	private static String readInput() {
