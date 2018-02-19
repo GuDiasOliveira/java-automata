@@ -82,7 +82,7 @@ D
 
 Running:
 ```bash
-java -jar automata.jar --accept w x x z < ex.txt && echo "Accepted!" || echo "Rejected"
+java -jar your_exported_program.jar --accept w x x z < ex.txt && echo "Accepted!" || echo "Rejected"
 ```
 Will output:
 ```bash
@@ -91,9 +91,9 @@ Rejected
 
 Running:
 ```bash
-java -jar automata.jar --accept w x x z w w < ex.txt && echo "Accepted!" || echo "Rejected"
+java -jar your_exported_program.jar --accept w x x z w w < ex.txt && echo "Accepted!" || echo "Rejected"
 ```
-Will output
+Will output:
 ```bash
 Accepted!
 ```
