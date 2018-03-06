@@ -138,6 +138,38 @@ public class Program {
 		case "--accept":
 			System.exit(automata.accept(symbolsArgs) ? 0 : 1);
 			break;
+		case "--nfa2dfa":
+			String separator = args.length >= 2 ? args[1].trim() : ",";
+			if (!separator.isEmpty())
+				separator = separator.substring(0, 0);
+			Automata<String, String> nfa = automata.nfa2dfa(separator);
+			StringBuilder str = new StringBuilder();
+			str.append("states:\n");
+			for (String s : nfa.getStates()) {
+				str.append(s);
+				str.append(" ");
+				if (nfa.isInitialState(s))
+					str.append("S");
+				if (nfa.isFinalState(s))
+					str.append("F");
+				str.append("\n");
+			}
+			str.append("\ntransitions:\n");
+			for (String s : nfa.getStates()) {
+				for (String sy : nfa.getSymbols()) {
+					String toS = nfa.transition(s, sy);
+					if (toS != null) {
+						str.append(s);
+						str.append(" ");
+						str.append(sy);
+						str.append(" ");
+						str.append(toS);
+						str.append("\n");
+					}
+				}
+			}
+			System.out.println(str);
+			break;
 		case "--help":
 			break;
 		default:

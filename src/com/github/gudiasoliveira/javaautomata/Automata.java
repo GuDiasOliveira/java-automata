@@ -2,6 +2,7 @@ package com.github.gudiasoliveira.javaautomata;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +19,20 @@ public class Automata<TState, TSymbol> {
 			this.stateIn = stateIn;
 			this.symbol = symbol;
 			this.stateOut = stateOut;
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (!(obj instanceof Transition))
+				return false;
+			Transition other = (Transition) obj;
+			if (!this.stateIn.equals(other.stateIn))
+				return false;
+			if (!this.symbol.equals(other.symbol))
+				return false;
+			if (!this.stateOut.equals(other.stateOut))
+				return false;
+			return true;
 		}
 	}
 	
@@ -89,8 +104,22 @@ public class Automata<TState, TSymbol> {
 			return this;
 		}
 		
+		private void removeDuplicates(List list) {
+			List newList = new ArrayList();
+			for (Object e : list)
+				if (!newList.contains(e))
+					newList.add(e);
+			list.clear();
+			list.addAll(newList);
+		}
+		
 		public Automata<TState, TSymbol> build() {
 			Automata<TState, TSymbol> automata = new Automata<>();
+			
+			removeDuplicates(mStates);
+			removeDuplicates(mSymbols);
+			removeDuplicates(mFinalStates);
+			removeDuplicates(mTransitionFunction);
 			
 			automata.mStates = (TState[]) mStates.toArray();			
 			automata.mSymbols= (TSymbol[]) mSymbols.toArray();
@@ -113,6 +142,7 @@ public class Automata<TState, TSymbol> {
 				}
 				i++;
 			}
+			removeDuplicates(finalStateIndexes);
 			automata.mFinalStateIndexes = new int[finalStateIndexes.size()];
 			for (i = 0; i < finalStateIndexes.size(); i++)
 				automata.mFinalStateIndexes[i] = finalStateIndexes.get(i);
@@ -218,5 +248,131 @@ public class Automata<TState, TSymbol> {
 	
 	public boolean accept(TSymbol... symbols) {
 		return isFinalState(transition(getInitialState(), symbols));
+	}
+	
+	public HashSet<TState> transitionNFA(TState stateIn, TSymbol... symbols) {
+		HashSet<TState> statesIn = new HashSet<>();
+		statesIn.add(stateIn);
+		return transitionNFA(statesIn, symbols);
+	}
+	
+	private HashSet<TState> transitionNFA(HashSet<TState> statesIn, TSymbol... symbols) {
+		HashSet<TState> currentStates = new HashSet<>();
+		currentStates.addAll(statesIn);
+		for (TSymbol symbol : symbols) {
+			HashSet<TState> nextStates = new HashSet<>();
+			for (Transition<TState, TSymbol> transition : mTransitionFunction) {
+				if (transition.symbol.equals(symbol) && currentStates.contains(transition.stateIn) && !nextStates.contains(transition.stateOut))
+					nextStates.add(transition.stateOut);
+			}
+			currentStates.clear();
+			currentStates.addAll(nextStates);
+		}
+		return currentStates;
+	}
+	
+	public Automata<HashSet<TState>, TSymbol> nfa2dfa() {
+		Automata.Builder<HashSet<TState>, TSymbol> automataB = new Automata.Builder<>();
+		
+		automataB.mInitialState = new HashSet<>();
+		automataB.mInitialState.add(this.getInitialState());
+		
+		automataB.mStates = new ArrayList<>();
+		automataB.mStates.add(automataB.mInitialState);
+		
+		automataB.mSymbols = new ArrayList<>();
+		automataB.mTransitionFunction = new ArrayList<>();
+		for (TSymbol symbol : this.mSymbols) {
+			automataB.mSymbols.add(symbol);
+			HashSet<TState> nextStates = transitionNFA(automataB.mInitialState, symbol);
+			if (!automataB.mStates.contains(nextStates) && !nextStates.isEmpty())
+				automataB.mStates.add(nextStates);
+			
+			if (!nextStates.isEmpty()) {
+				Transition<HashSet<TState>, TSymbol> trans = new Transition<>();
+				trans.stateIn = automataB.mStates.get(0);
+				trans.stateOut = automataB.mStates.get(automataB.mStates.indexOf(nextStates));
+				trans.symbol = symbol;
+				automataB.mTransitionFunction.add(trans);
+			}
+		}
+		
+		for (int i = 1; i < automataB.mStates.size(); i++) {
+			for (TSymbol symbol : this.mSymbols) {
+				HashSet<TState> nextStates = transitionNFA(automataB.mStates.get(i), symbol);
+				if (!automataB.mStates.contains(nextStates) && !nextStates.isEmpty())
+					automataB.mStates.add(nextStates);
+				
+				if (!nextStates.isEmpty()) {
+					Transition<HashSet<TState>, TSymbol> trans = new Transition<>();
+					trans.stateIn = automataB.mStates.get(i);
+					trans.stateOut = automataB.mStates.get(automataB.mStates.indexOf(nextStates));
+					trans.symbol = symbol;
+					automataB.mTransitionFunction.add(trans);
+				}
+			}
+		}
+		
+		automataB.mFinalStates = new ArrayList<>();
+		TState[] thisFinalStates = this.getFinalStates();
+		for (HashSet<TState> state : automataB.mStates) {
+			for (TState finalState : thisFinalStates) {
+				if (state.contains(finalState)) {
+					automataB.mFinalStates.add(state);
+					break;
+				}
+			}
+		}
+		
+		return automataB.build();
+	}
+	
+	public<TStateTo> Automata<TStateTo, TSymbol> nfa2dfa(NFAStateConverter<TState, TStateTo> converter) {
+		Automata<HashSet<TState>, TSymbol> rawAutomata = nfa2dfa();
+		
+		Automata<TStateTo, TSymbol> a = new Automata<TStateTo, TSymbol>();
+		a.mInitialStateIndex = rawAutomata.mInitialStateIndex;
+		a.mFinalStateIndexes = rawAutomata.mFinalStateIndexes;
+		a.mSymbols = rawAutomata.mSymbols;
+		
+		a.mStates = (TStateTo[]) new Object[rawAutomata.mStates.length];
+		a.mTransitionFunction = (Transition<TStateTo, TSymbol>[]) new Object[rawAutomata.mTransitionFunction.length];
+		
+		HashMap<HashSet<TState>, TStateTo> convertStatesMap = new HashMap<>();
+		for (HashSet<TState> rawState : rawAutomata.mStates)
+			convertStatesMap.put(rawState, converter.convertNFAState(rawState));
+		
+		for (int i = 0; i < a.mStates.length; i++)
+			a.mStates[i] = convertStatesMap.get(rawAutomata.mStates[i]);
+		for (int i = 0; i < a.mTransitionFunction.length; i++) {
+			a.mTransitionFunction[i] = new Transition<TStateTo, TSymbol>(
+					convertStatesMap.get(rawAutomata.mTransitionFunction[i].stateIn), // stateIn
+					rawAutomata.mTransitionFunction[i].symbol, // symbol
+					convertStatesMap.get(rawAutomata.mTransitionFunction[i].stateOut) // stateOut
+			);
+		}
+		
+		return a;
+	}
+	
+	public Automata<String, TSymbol> nfa2dfa(String stateSeparator) {
+		return nfa2dfa(new NFAStateConverter<TState, String>() {
+			@Override
+			public String convertNFAState(HashSet<TState> state) {
+				StringBuilder str = new StringBuilder();
+				boolean first = true;
+				for (TState s : state) {
+					if (!first)
+						str.append(stateSeparator);
+					str.append(s);
+					first = false;
+				}
+				return str.toString();
+			}
+		});
+	}
+	
+	public interface NFAStateConverter<TStateFrom, TStateTo> {
+		TStateTo convertNFAState(HashSet<TStateFrom> state);
 	}
 }
