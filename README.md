@@ -4,7 +4,7 @@
 
 The runnable is in <code>Program</code> class. It reads an automata input, then outputs a *dot* text data format for rendering graphs, in a program like [Graphviz](https://www.graphviz.org/); and some other options.
 
-### Program's data input format
+## Program's data input format
 
 ```
 states:
@@ -26,7 +26,7 @@ When found <code>transitions:</code> line, then it starts the transitions declar
 
 The first argument (until white space) is the current state it is in, the second one is the symbol label (delimited by whitespace) that is the path to go to the destination state (third argument).
 
-### Program options
+## Program options
 
 Run this command to display the help of the options:
 ```bash
@@ -34,7 +34,7 @@ java -jar your_exported_program.jar --help
 ```
 
 ### Example
-![](ex.png?=classes=float-left)
+![](ex.png)
 
 Input
 
@@ -98,7 +98,7 @@ Will output:
 Accepted!
 ```
 
-### Tip to render the automata graphically in Linux
+## Tip to render the automata graphically in Linux
 
 1. Install Graphviz:
 ```bash
@@ -116,3 +116,89 @@ Export this project in a jar file, then run: (where <code>your_exported_program.
 ```bash
 java -jar your_exported_program.jar --dot-graph < your_input_file.txt | xdot -
 ```
+
+## Working with non-deterministic finite automatas (NFA)
+
+You can input a NFA to output a converted to *deterministic finite automata* (DFA).
+
+Command:
+```bash
+java -jar automata.jar --nfa2dfa < input_nfa.txt
+```
+
+Input:
+```
+states:
+q0 S
+q1 
+q2 F
+
+transitions:
+q0 a q0
+q0 b q0
+q0 a q1
+q1 b q2
+```
+
+Output:
+```
+states:
+q0 S
+q1,q0 
+q2,q0 F
+
+transitions:
+q0 a q1,q0
+q0 b q0
+q1,q0 a q1,q0
+q1,q0 b q2,q0
+q2,q0 a q1,q0
+q2,q0 b q0
+```
+
+You can view the converted automata graphically:
+```bash
+java -jar automata.jar --nfa2dfa < input_nfa.txt | java -jar automata.jar --dot-graph | xdot -
+```
+![](ex2.png) 
+
+You can specify a custom separator caracter, for example:
+```bash
+java -jar automata.jar --nfa2dfa '-' < input_nfa.txt
+```
+```
+states:
+q0 S
+q1-q0 
+q2-q0 F
+
+transitions:
+q0 a q1-q0
+q0 b q0
+q1-q0 a q1-q0
+q1-q0 b q2-q0
+q2-q0 a q1-q0
+q2-q0 b q0
+```
+Or empty separator:
+```bash
+java -jar automata.jar --nfa2dfa '' < input_nfa.txt
+```
+```
+states:
+q0 S
+q1q0 
+q2q0 F
+
+transitions:
+q0 a q1q0
+q0 b q0
+q1q0 a q1q0
+q1q0 b q2q0
+q2q0 a q1q0
+q2q0 b q0
+```
+
+# Glossary
+**NFA** - Non-deterministic finite automata
+**DFA** - Deterministic finite automata

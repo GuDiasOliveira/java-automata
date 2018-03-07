@@ -190,6 +190,10 @@ public class Program {
 		System.out.println("--accept [sequence of symbols]\n  "
 				+ "Return status code of success if the sequence of transitions took to a accepter (final) state."
 				+ " Failure status code otherwise");
+		System.out.println("--nfa2dfa [separator character]\n  "
+				+ "Read a non-deterministic automata from input, then output an automata converted to deterministic "
+				+ "formatted to this program automata format, where the states label are each state set separating each "
+				+ "state by [separator character] (or comma(',') if not specified) (example: \"A,B,D\")");
 		System.out.println("--help\n  "
 				+ "Display this help");
 	}
