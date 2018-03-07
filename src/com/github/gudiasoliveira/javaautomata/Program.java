@@ -222,20 +222,20 @@ public class Program {
 			while (it.hasNext()) {
 				Map.Entry trans = it.next();
 				str.append("    \"");
-				str.append(state.toString().replace("\"", "\\\""));
+				str.append(state.toString().replace("\\", "\\\\").replace("\"", "\\\""));
 				str.append("\" -> \"");
-				str.append(trans.getValue().toString().replace("\"", "\\\""));
+				str.append(trans.getValue().toString().replace("\\", "\\\\").replace("\"", "\\\""));
 				str.append("\" [label=\"");
-				str.append(trans.getKey().toString().replace("\"", "\\\""));
+				str.append(trans.getKey().toString().replace("\\", "\\\\").replace("\"", "\\\""));
 				str.append("\"]\n");
 			}
 		}
 		str.append("    \"\" [shape=none]\n    \"\" -> \"");
-		str.append(automata.getInitialState().toString().replace("\"", "\\\""));
+		str.append(automata.getInitialState().toString().replace("\\", "\\\\").replace("\"", "\\\""));
 		str.append("\"\n");
 		for (Object finalState : automata.getFinalStates()) {
 			str.append("    \"");
-			str.append(finalState.toString().replace("\"", "\\\""));
+			str.append(finalState.toString().replace("\\", "\\\\").replace("\"", "\\\""));
 			str.append("\" [peripheries=2]\n");
 		}
 		str.append("}");
