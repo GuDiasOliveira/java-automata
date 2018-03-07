@@ -199,6 +199,17 @@ q2q0 a q1q0
 q2q0 b q0
 ```
 
+### You can work with the other options with NFAs
+Examples:
+```bash
+java -jar automata.jar --nfa2dfa < input_nfa.txt | java -jar automata.jar --transitions w x x z w w
+```
+```bash
+java -jar automata.jar --nfa2dfa < input_nfa.txt | java -jar automata.jar --accept w x x z w w && echo "Accepted!" || echo "Rejected!"
+```
+
 # Glossary
+
 **NFA** - Non-deterministic finite automata
+
 **DFA** - Deterministic finite automata
