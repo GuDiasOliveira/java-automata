@@ -141,7 +141,7 @@ public class Program {
 		case "--nfa2dfa":
 			String separator = args.length >= 2 ? args[1].trim() : ",";
 			if (!separator.isEmpty())
-				separator = separator.substring(0, 0);
+				separator = separator.substring(0, 1);
 			Automata<String, String> nfa = automata.nfa2dfa(separator);
 			StringBuilder str = new StringBuilder();
 			str.append("states:\n");
@@ -209,6 +209,7 @@ public class Program {
 		return line;
 	}
 	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static String toDotGraph(Automata automata) {
 		StringBuilder str = new StringBuilder();
 		str.append("digraph {\n");
@@ -216,22 +217,22 @@ public class Program {
 			Iterator<Map.Entry> it = automata.getTransitions(state).entrySet().iterator();
 			while (it.hasNext()) {
 				Map.Entry trans = it.next();
-				str.append("    ");
-				str.append(state);
-				str.append(" -> ");
-				str.append(trans.getValue());
-				str.append(" [label=\"");
-				str.append(trans.getKey());
+				str.append("    \"");
+				str.append(state.toString().replace("\"", "\\\""));
+				str.append("\" -> \"");
+				str.append(trans.getValue().toString().replace("\"", "\\\""));
+				str.append("\" [label=\"");
+				str.append(trans.getKey().toString().replace("\"", "\\\""));
 				str.append("\"]\n");
 			}
 		}
-		str.append("    \"\" [shape=none]\n    \"\" -> ");
-		str.append(automata.getInitialState());
-		str.append("\n");
+		str.append("    \"\" [shape=none]\n    \"\" -> \"");
+		str.append(automata.getInitialState().toString().replace("\"", "\\\""));
+		str.append("\"\n");
 		for (Object finalState : automata.getFinalStates()) {
-			str.append("    ");
-			str.append(finalState);
-			str.append(" [peripheries=2]\n");
+			str.append("    \"");
+			str.append(finalState.toString().replace("\"", "\\\""));
+			str.append("\" [peripheries=2]\n");
 		}
 		str.append("}");
 		return str.toString();

@@ -1,11 +1,13 @@
 package com.github.gudiasoliveira.javaautomata;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("unchecked")
 public class Automata<TState, TSymbol> {
 	
 	private static class Transition<TState, TSymbol> {
@@ -21,6 +23,7 @@ public class Automata<TState, TSymbol> {
 			this.stateOut = stateOut;
 		}
 		
+		@SuppressWarnings("rawtypes")
 		@Override
 		public boolean equals(Object obj) {
 			if (!(obj instanceof Transition))
@@ -104,6 +107,7 @@ public class Automata<TState, TSymbol> {
 			return this;
 		}
 		
+		@SuppressWarnings("rawtypes")
 		private void removeDuplicates(List list) {
 			List newList = new ArrayList();
 			for (Object e : list)
@@ -121,7 +125,10 @@ public class Automata<TState, TSymbol> {
 			removeDuplicates(mFinalStates);
 			removeDuplicates(mTransitionFunction);
 			
-			automata.mStates = (TState[]) mStates.toArray();			
+			automata.mStates = (TState[]) mStates.toArray((TState[]) (
+					!mStates.isEmpty()
+					? Array.newInstance(mStates.get(0).getClass(), mStates.size())
+					: new Object[0]));
 			automata.mSymbols= (TSymbol[]) mSymbols.toArray();
 			
 			automata.mInitialStateIndex = 0;
@@ -191,7 +198,7 @@ public class Automata<TState, TSymbol> {
 	}
 	
 	public TState[] getStates() {
-		TState[] states = (TState[]) new Object[mStates.length];
+		TState[] states = (TState[]) (mStates.length > 0 ? Array.newInstance(mStates[0].getClass(), mStates.length) : new Object[0]);
 		for (int i = 0; i < states.length; i++)
 			states[i] = mStates[i];
 		return states;
@@ -206,7 +213,7 @@ public class Automata<TState, TSymbol> {
 	}
 	
 	public TSymbol[] getSymbols() {
-		TSymbol[] symbols = (TSymbol[]) new Object[mSymbols.length];
+		TSymbol[] symbols = (TSymbol[]) (mSymbols.length > 0 ? Array.newInstance(mSymbols[0].getClass(), mSymbols.length) : new Object[0]);
 		for (int i = 0; i < symbols.length; i++)
 			symbols[i] = mSymbols[i];
 		return symbols;
@@ -225,7 +232,7 @@ public class Automata<TState, TSymbol> {
 	}
 	
 	public TState[] getFinalStates() {
-		TState[] finalStates = (TState[]) new Object[mFinalStateIndexes.length];
+		TState[] finalStates = (TState[]) (mStates.length > 0 ? Array.newInstance(mStates[0].getClass(), mFinalStateIndexes.length) : new Object[0]);
 		for (int i = 0; i < finalStates.length; i++)
 			finalStates[i] = mStates[mFinalStateIndexes[i]];
 		return finalStates;
@@ -330,17 +337,21 @@ public class Automata<TState, TSymbol> {
 	public<TStateTo> Automata<TStateTo, TSymbol> nfa2dfa(NFAStateConverter<TState, TStateTo> converter) {
 		Automata<HashSet<TState>, TSymbol> rawAutomata = nfa2dfa();
 		
+		HashMap<HashSet<TState>, TStateTo> convertStatesMap = new HashMap<>();
+		for (HashSet<TState> rawState : rawAutomata.mStates)
+			convertStatesMap.put(rawState, converter.convertNFAState(rawState));
+		
 		Automata<TStateTo, TSymbol> a = new Automata<TStateTo, TSymbol>();
 		a.mInitialStateIndex = rawAutomata.mInitialStateIndex;
 		a.mFinalStateIndexes = rawAutomata.mFinalStateIndexes;
 		a.mSymbols = rawAutomata.mSymbols;
 		
-		a.mStates = (TStateTo[]) new Object[rawAutomata.mStates.length];
-		a.mTransitionFunction = (Transition<TStateTo, TSymbol>[]) new Object[rawAutomata.mTransitionFunction.length];
-		
-		HashMap<HashSet<TState>, TStateTo> convertStatesMap = new HashMap<>();
-		for (HashSet<TState> rawState : rawAutomata.mStates)
-			convertStatesMap.put(rawState, converter.convertNFAState(rawState));
+		int length = ((Object[]) rawAutomata.mStates).length;
+		a.mStates = (TStateTo[]) (length > 0 ? Array.newInstance(
+				convertStatesMap.get(rawAutomata.mStates[0]).getClass(),
+				length) : new Object[0]);
+		length = ((Object[]) rawAutomata.mTransitionFunction).length;
+		a.mTransitionFunction = (Transition<TStateTo, TSymbol>[]) Array.newInstance(Transition.class, length);
 		
 		for (int i = 0; i < a.mStates.length; i++)
 			a.mStates[i] = convertStatesMap.get(rawAutomata.mStates[i]);
