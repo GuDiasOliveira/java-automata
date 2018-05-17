@@ -57,7 +57,7 @@ public class Program {
 				System.exit(1);
 				return;
 			}
-			String[] inputs = line.split(" ");
+			String[] inputs = line.split("\\s+");
 			states.add(inputs[0].trim());
 			if (inputs.length > 1) {
 				switch (inputs[1].trim()) {
@@ -86,7 +86,7 @@ public class Program {
 		
 		List<String> symbols = new ArrayList<String>();
 		while ((line = readInput()) != null) {
-			String[] inputs = line.split(" ");
+			String[] inputs = line.split("\\s+");
 			if (inputs.length < 3) {
 				System.err.println(
 						"Invalid input! Expected three inputs for transition: <from state> <symbol> <to state>");
